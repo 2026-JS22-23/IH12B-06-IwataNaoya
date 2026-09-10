@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>名古屋観光</title>
+
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCAKLjisxFelKwIl1_G6MiEO9-ya7Twr5s&callback=console.debug&libraries=maps,marker&v=beta">
+    </script>
+
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, "Yu Gothic", YuGothic, sans-serif;
+      background: #f1f3f4;
+      color: #202124;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: #fff;
+      border-bottom: 1px solid #e8eaed;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+      z-index: 20;
+    }
+
+    .hdr-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #1a73e8;
+      color: #fff;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    #hdr h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    #hdr p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: #5f6368;
+    }
+
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f1f3f4;
+      border: 1px solid #dadce0;
+      border-radius: 999px;
+      padding: 8px 12px;
+      min-width: 320px;
+    }
+
+    .search-wrap input {
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 14px;
+      width: 100%;
+    }
+
+    .search-wrap button {
+      border: none;
+      background: #1a73e8;
+      color: #fff;
+      border-radius: 999px;
+      padding: 7px 12px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    #main {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      padding: 16px;
+      gap: 16px;
+    }
+
+    #sd-br {
+      width: 280px;
+      background: #fff;
+      border-radius: 18px;
+      padding: 16px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .sidebar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    #sd-br h2 {
+      margin: 0;
+      font-size: 16px;
+      color: #202124;
+    }
+
+    .sidebar-head span {
+      font-size: 12px;
+      color: #1a73e8;
+      background: #e8f0fe;
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .cat-btn {
+      border: 1px solid #dadce0;
+      background: #fff;
+      color: #5f6368;
+      padding: 8px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .cat-btn.active {
+      background: #e8f0fe;
+      color: #1a73e8;
+      border-color: #1a73e8;
+      font-weight: 600;
+    }
+
+    .side-btn {
+      display: block;
+      width: 100%;
+      margin-bottom: 8px;
+      text-align: left;
+      font-size: 14px;
+      padding: 10px 12px;
+      border: 1px solid #e8eaed;
+      border-radius: 12px;
+      background: #fff;
+      color: #202124;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .side-btn:hover {
+      background: #f8f9fa;
+      border-color: #1a73e8;
+      transform: translateY(-1px);
+    }
+
+    .empty-state {
+      padding: 12px;
+      color: #5f6368;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    #map-shell {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+      background: #e8eaed;
+    }
+
+    #map-shell gmp-map {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .map-toolbar {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 999px;
+      padding: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .map-tool {
+      border: none;
+      background: transparent;
+      padding: 8px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #5f6368;
+    }
+
+    .map-tool.active {
+      background: #e8f0fe;
+      color: #1a73e8;
+      font-weight: 600;
+    }
+
+    #map-shell {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+      background: #e8eaed;
+    }
+
+    #map-shell gmp-map {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .location-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 6;
+      border: none;
+      background: #fff;
+      color: #1a73e8;
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .location-btn:disabled {
+      opacity: 0.7;
+      cursor: wait;
+    }
+
+    .info-card {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      width: min(320px, calc(100% - 32px));
+      max-height: 70vh;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 16px;
+      padding: 14px 14px 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+      z-index: 6;
+      display: none;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .info-card.show {
+      display: block;
+    }
+
+    .info-card:active {
+      cursor: grabbing;
+    }
+
+    .info-card-content {
+      max-height: calc(70vh - 28px);
+      overflow-y: auto;
+      padding-right: 4px;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .info-card-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    #info-close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      border: none;
+      background: #f1f3f4;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .sp-t {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin-top: 8px;
+      border-radius: 10px;
+    }
+
+    .sp-b {
+      margin-top: 8px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #5f6368;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="hdr">
+    <div class="hdr-left">
+      <div class="brand-pill">Maps</div>
+      <div>
+        <h1>名古屋観光名所ナビ</h1>
+        <p></p>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <input id="search-input" type="text" placeholder="スポットを検索">
+      <button id="search-btn" type="button">検索</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <aside id="sd-br">
+      <div class="sidebar-head">
+        <h2>一覧</h2>
+        <span>おすすめ</span>
+      </div>
+      <div class="filter-tabs">
+        <button type="button" class="cat-btn active" data-key="spots">観光</button>
+        <button type="button" class="cat-btn" data-key="grume">グルメ</button>
+        <button type="button" class="cat-btn" data-key="cafe">カフェ</button>
+      </div>
+      <div id="btn-lst"></div>
+    </aside>
+
+    <div id="map-shell">
+      <button id="locate-btn" class="location-btn" type="button">📍 現在地</button>
+      <gmp-map id="my-map" center="35.18145655896588, 136.9069510229751" zoom="14" map-id="DEMO_MAP_ID"></gmp-map>
+
+      <div id="info" class="info-card">
+        <button id="info-close" type="button" aria-label="閉じる">×</button>
+        <div id="dia" class="info-card-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    // 観光スポットのデータ
+    const spotData = {
+      '名古屋城': {
+        pos: { lat: 35.18539348661174, lng: 136.89991413746912 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmE3XItG7of__oUTd5ACxRhy456NMFlSJzc14Co_Uw2y6MRLBpNo5V5491wmWd1SsbQh3ZgoaP6v_OP1tKKl23EMp3g0SiKJrv751OapG8NEvWQ8YxfY5gygws8DLWQD4WcofNQnK_t68UY=w408-h544-k-no',
+        bun: '徳川家康が築城した日本三名城の一つ。金のシャチホコが有名です。'
+      },
+      '熱田神宮': {
+        pos: { lat: 35.12758601848269, lng: 136.9087269827152 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWke5O3NWOTu8bR2GqmMt5BaHN6gZJL9bOs35XSPdFN4VlnRCpzMkMEyO_IUnFl0CX4RoBdX_pc0M_QR_utKJsWUhD3aNZY8UuU8Fd0YU5xZCcclxO1rl0uB0Bfl7P-G1qDYm6Yy=w408-h306-k-no',
+        bun: '三種の神器の一つ「草薙神剣」を祀る、古くから信仰を集める神社です。'
+      },
+      '名古屋港水族館': {
+        pos: { lat: 35.09085992466113, lng: 136.87843769620545 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkG2GaFNvORwQmRjccGruhlpNc-4TBKir_c1khxGoYRFFNnFeMleLoh3ZeMGbFOEbav32wtXOXnfSpWLBbCEDmg7Qxt3lYDN7O91Ro3Z94eYOM5agr6Nj2bGhtiVMD8dunlSiro=w408-h272-k-no',
+        bun: '日本最大級のプールで行われるイルカパフォーマンスが人気です。'
+      },
+      'FUJIなごや科学館': {
+        pos: { lat: 35.16519956360559, lng: 136.8997455115528 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkkClJ0Rce7D2GTTC7DHJT8Jn8uXvwG2kaQvLglSahPaCddXkJ9nzGDPz55eGNlYyUv4cTh7SXkSIYsTWCUET9FECokdztC4_UDmJ7lMk6kY-TD8xABJjj1gV69-hQz9eceLG0=w408-h306-k-no',
+        bun: '世界最大級のプラネタリウムドームを擁する、体験型の科学館です。'
+      },
+    };
+
+    // グルメ情報のデータ
+    const grumeData = {
+      '矢場とん': {
+        pos: { lat: 35.175575596058295, lng: 136.8810936842797 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk6MVuyv6hbmL8z-1RuhL4FBJohBv7cVd22ysuzV0szUd6ky_PsOCc9N_4hEkwaXSibHTPrMoLm9Uybxlh2QpITEk39W0-WZXtDArsmx8kO8Zv_uWgvDmgGPDLEr98YzWctuQWQjT0Pe045=w408-h306-k-no',
+        bun: '昭和22年に創業し、名古屋グルメ「みそかつ」を世に広めた有名店。南九州産の豚肉を使用し、オリジナルのパン粉でふんわり感とカリッと感を演出したトンカツに、天然醸造の豆味噌を使用した秘伝の味噌ダレが相性抜群です。名物のわらじとんかつは通常の2倍の大きさ。味噌とソースの2種類の味を半々で味わうのがおすすめです。'
+      },
+      '味仙': {
+        pos: { lat: 35.172066788886006, lng: 136.8895050882721 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlpDvSIon_mkgxVwXdWK1yENRjtvua6OdRGCs_nSLnUxrSdDg_J_hmkU18ZMDWvHM6jTu2fEGGJPYBwMvdLIbfYMjgLj_6fStE4C6ISi5RfiJ15tOAeny-eJjhF8Cgig7b1OC5ULmzG8pBt=w408-h306-k-no',
+        bun: '1960年に創業。今や名古屋名物としても名高いご当地ラーメン「台湾ラーメン」の発祥店。台湾とは名が付いても、実はれっきとした名古屋オリジナルのこのラーメン、同店の台湾人の料理人が作ったまかない料理が始まりだとか。鶏ガラスープのラーメンに、ニンニクや唐辛子を効かせた挽き肉とニラがたっぷり乗った激辛味が魅力です。創業時から継ぎ足しのタレで煮込む手羽先や青菜炒めもぜひ！'
+      },
+      'うなぎのしろむら 泉店': {
+        pos: { lat: 35.175836546923954, lng: 136.9116919608399 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnkQC0g-bH1AItHMbkmb3Q8R6Suno2DkK6ZoFxVlVbGIoBrQ0vfSKxqmXs0CnWiKhekoOFHDdnMUyLdrXlQ7CGEzWdA2wxAAuuhnMnT3Fx1BSBDRbj5XQBfU_FDmolrriEXM_F0hQ=w408-h272-k-no',
+        bun: '名古屋名物ひつまぶしは、ぜひうなぎ料理専門店で味わいたいもの。「うなぎのしろむら 泉店」では、矢作川水系の豊かな水で育った三河一色産うなぎのみを使用。毎年、伊勢神宮外宮へも奉納されている縁起の良いうなぎです。注文を受けてから捌いた鮮度抜群のうなぎを、炭火でじっくり香ばしく焼き上げる蒲焼きは、身はふんわりと柔らかく、皮はパリッと絶妙な焼き加減。「活うなぎひつまぶし」（3,330円～）は、添えられた醤油漬け卵黄で卵かけご飯にして味わうのも格別です。'
+      },
+      '鳥銀 本店': {
+        pos: { lat: 35.17116087545023, lng: 136.90577149617118 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm4wynwrAwrKpD3YkX1W6o90HCJe03GMcJycpKemfiVfooNtXQqPvnX_qZ-lJdtF4y-cMLTlvUS0x0swD19VjS0nStII2Wq3vb4hoYZMwubpovi7BWT6NQWhxC7GopPAAX4A9h8XvrrJk8s=w408-h306-k-no',
+        bun: '日本三大地鶏の一つにも数えられる名古屋コーチン。「名古屋コーチン料理 鳥銀本店 ～錦三丁目～」は、名古屋コーチン料理一筋、創業50年の老舗です。最高級の純系名古屋コーチンのみを使用しており、人気の「名古屋コーチン刺身五種盛」（2,100円）は、朝引きならではの身の締まった旨味を堪能できます。'
+      },
+    }
+
+    // カフェ情報のデータ
+    const cafeData = {
+      'SUNDAY FULLER CAFE': {
+        pos: { lat: 35.16815316382111, lng: 136.8879061673352 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmUaXV6AwlycPsDRItSTXos0gjLNFCMPMCP3K2RkUe0gXUZyNpnQOFilhTKLgvH-FzZ0MhFikOC909pPq5oBRIPJlg3KpvBGQ5FoMsGjPbVlF6qaJAChWERrk47gORrueEDfbmHC3Nq0ks=w408-h272-k-no',
+        bun: 'クロワッサン生地をベルギー ワッフル型で焼いたスイーツやスペシャルティー コーヒーなどを提供するシャビ―シックな雰囲気のカフェ。'
+      },
+      'ヴァンサンヌ ドゥ': {
+        pos: { lat: 35.17205997351015, lng: 136.90712009617116 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk-cIOyrA0k_Sh_ZS29ltvENFkmMm3fCNRK_nbbbWaK8U7IVtSlAxeEUR3x28F-l2uTpqAWM5LUonqEqotJc-dCVILBvLQ--CWlhXhBcRqSIVIvVNMlbYj5r9GUKLRWcXnmJtGLyKsGLIOg=w426-h240-k-no',
+        bun: '居心地の良いシンプルなカフェ。スペシャリティ コーヒーとデザートを提供。アイスクリームを添えたアップルパイが有名。'
+      },
+      '洋菓子・喫茶ボンボン': {
+        pos: { lat: 35.17782156107807, lng: 136.91432686548472 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmO3yHZ-oqm98rlmW9ZBxLcJDrsjosYwvMiot12FZ1as6eHfZIn5UVpgQ2nSmucDwMV8D8BFlCMVaybiPIzLTsf1KK6ECPpeI6eSNzu5TlPOToGrmvaE0wI5j2BUQ2gsOkIef_3DZvgR5k=w408-h306-k-no',
+        bun: '滑らかな革張りのソファーがある 1940 年代創業のカフェ。洋風のケーキ、朝食、サンドイッチを提供する。'
+      },
+      'FabCafe Nagoya': {
+        pos: { lat: 35.17631548187394, lng: 136.9082070808282 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk2X7_nhKzsyleuGmEsKbv7-PWO54dJsO6Gi9FgJszKE_OM2TxDm5IgtOYr3c9oeoprHJVr-0tmlnR7eQg2ilIFvQadWr1_bzK87DPQ5d1W7Sqaj9qq19zGkzRWEiIU8uCLb_8=w472-h240-k-no',
+        bun: '2020年9月にオープンしたFabCafe Nagoyaは、久屋大通公園内のRAYARD Hisaya-odori Parkに位置する、デジタルものづくりが体験できるユニークなカフェです。レーザーカッターやUVプリンター、デジタル刺繍プリンターなどのデジタル工作機械を常設しており、自分で描いた絵や写真をその場でアクセサリーやトートバッグなどのオリジナルグッズにすることができます。'
+      },
+      'ブチョーコーヒー': {
+        pos: { lat: 35.16617634484232, lng: 136.89056103849947 },
+        phot: 'https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlYV4DIMrAi4XOmVB5hxfwnsy1LPaXxsS0TVibtXwmAWQyDcb_0RdUTTi8JOCdodt0xoCnz7EHYyIWM7jlkBAQtQTw2YGIkeQTet7La5bx-t4xrt_w7f-nSJ6zxt9ly9xlswB5-FTlTcQE=w408-h544-k-no',
+        bun: 'コーヒーやサンドイッチを提供するくつろげるカフェ。名古屋名物の小倉トーストで有名。'
+      },
+    }
+
+
+    // カテゴリごとにデータを切り替えられるようにまとめる
+    const datasets = {
+      spots: spotData,
+      grume: grumeData,
+      cafe: cafeData
+    };
+
+    let activeDataKey = 'spots';
+    let activeData = datasets[activeDataKey];
+    let currentButtons = [];
+
+    // 選ばれたスポットの詳細情報をモーダルに表示する
+    function showDia(ttl, dataSet = activeData) {
+      const dat = dataSet[ttl];
+      if (dat) {
+        const html_c = `
+          <h3>${ttl}</h3>
+          <img src="${dat.phot}" alt="${ttl}" class="sp-t">
+          <p class="sp-b">${dat.bun}</p>
+        `;
+        $('#dia').html(html_c);
+        $('#info').addClass('show');
+      }
+    }
+
+    // モーダルをマウスでドラッグできるようにする
+    function makeDraggable(card) {
+      let isDragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      card.addEventListener('pointerdown', (event) => {
+        if (event.target.closest('#info-close')) return;
+        isDragging = true;
+        card.setPointerCapture(event.pointerId);
+        const rect = card.getBoundingClientRect();
+        const parentRect = card.offsetParent ? card.offsetParent.getBoundingClientRect() : { left: 0, top: 0 };
+        offsetX = event.clientX - rect.left;
+        offsetY = event.clientY - rect.top;
+        card.style.left = `${rect.left - parentRect.left}px`;
+        card.style.top = `${rect.top - parentRect.top}px`;
+        card.style.right = 'auto';
+        card.style.bottom = 'auto';
+      });
+
+      card.addEventListener('pointermove', (event) => {
+        if (!isDragging) return;
+        const parentRect = card.offsetParent ? card.offsetParent.getBoundingClientRect() : { left: 0, top: 0 };
+        const x = event.clientX - parentRect.left - offsetX;
+        const y = event.clientY - parentRect.top - offsetY;
+        card.style.left = `${x}px`;
+        card.style.right = 'auto';
+        card.style.top = `${y}px`;
+        card.style.bottom = 'auto';
+      });
+
+      card.addEventListener('pointerup', () => {
+        isDragging = false;
+      });
+      card.addEventListener('pointercancel', () => {
+        isDragging = false;
+      });
+    }
+
+    // モーダルを閉じる
+    function hideDia() {
+      $('#info').removeClass('show');
+    }
+
+    // 選ばれたスポットに地図を移動し、モーダルも表示する
+    function moveToSpot(ttl, dataSet = activeData) {
+      const dat = dataSet[ttl];
+      const mapEl = document.getElementById('my-map');
+
+      if (!dat || !mapEl) return;
+
+      mapEl.setAttribute('center', `${dat.pos.lat},${dat.pos.lng}`);
+      mapEl.setAttribute('zoom', '15');
+
+      if (mapEl.innerMap) {
+        mapEl.innerMap.panTo(dat.pos);
+        mapEl.innerMap.setZoom(15);
+      }
+
+      showDia(ttl, dataSet);
+    }
+
+    // 現在のカテゴリに対応するマーカーを地図に描画する
+    function renderMarkers(dataSet) {
+      const mapEl = document.getElementById('my-map');
+      if (!mapEl) return;
+
+      Array.from(mapEl.children).forEach(child => {
+        if (child.tagName === 'GMP-ADVANCED-MARKER' && child.id !== 'current-location-marker') {
+          mapEl.removeChild(child);
+        }
+      });
+
+      Object.keys(dataSet).forEach(ttl => {
+        const markerEl = document.createElement('gmp-advanced-marker');
+        const item = dataSet[ttl];
+        markerEl.setAttribute('position', `${item.pos.lat},${item.pos.lng}`);
+        markerEl.setAttribute('title', ttl);
+        markerEl.addEventListener('click', () => {
+          moveToSpot(ttl, dataSet);
+        });
+        mapEl.appendChild(markerEl);
+      });
+    }
+
+    // 検索ワードに応じて一覧の表示を絞り込む
+    function applySearchFilter() {
+      const searchInput = $('#search-input');
+      const keyword = searchInput.val().trim().toLowerCase();
+      const emptyState = $('#empty-state');
+      let hasVisible = false;
+
+      currentButtons.forEach(btn => {
+        const match = btn.text().toLowerCase().includes(keyword);
+        btn.toggle(match);
+        if (match) hasVisible = true;
+      });
+
+      emptyState.toggle(!hasVisible && keyword !== '');
+    }
+
+    // サイドバーにスポットのボタン一覧を作る
+    function renderButtonList(dataSet) {
+      const btnLst = $('#btn-lst');
+      btnLst.empty();
+      currentButtons = [];
+
+      Object.keys(dataSet).forEach(ttl => {
+        const btn = $('<button>')
+          .addClass('side-btn')
+          .text(ttl)
+          .on('click', () => {
+            moveToSpot(ttl, dataSet);
+          });
+        currentButtons.push(btn);
+        btnLst.append(btn);
+      });
+
+      btnLst.append('<div id="empty-state" class="empty-state">該当するスポットがありません</div>');
+      applySearchFilter();
+    }
+
+    // カテゴリ切り替えを行い、地図・一覧・モーダルを更新する
+    function setActiveCategory(key) {
+      activeDataKey = key;
+      activeData = datasets[key];
+      $('.cat-btn').removeClass('active');
+      $(`.cat-btn[data-key="${key}"]`).addClass('active');
+      hideDia();
+      renderMarkers(activeData);
+      renderButtonList(activeData);
+    }
+
+    // 現在地を取得して地図の中心に表示する
+    function showCurrentLocation() {
+      const mapEl = document.getElementById('my-map');
+      const locateBtn = document.getElementById('locate-btn');
+
+      if (!mapEl || !navigator.geolocation) {
+        alert('このブラウザでは位置情報を取得できません。');
+        return;
+      }
+
+      if (locateBtn) {
+        locateBtn.disabled = true;
+        locateBtn.textContent = '取得中...';
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+
+          mapEl.setAttribute('center', `${pos.lat},${pos.lng}`);
+          mapEl.setAttribute('zoom', '16');
+
+          if (mapEl.innerMap) {
+            mapEl.innerMap.panTo(pos);
+            mapEl.innerMap.setZoom(16);
+          }
+
+          let markerEl = document.getElementById('current-location-marker');
+          if (!markerEl) {
+            markerEl = document.createElement('gmp-advanced-marker');
+            markerEl.id = 'current-location-marker';
+            markerEl.setAttribute('title', '現在地');
+            mapEl.appendChild(markerEl);
+          }
+          markerEl.setAttribute('position', `${pos.lat},${pos.lng}`);
+
+          if (locateBtn) {
+            locateBtn.disabled = false;
+            locateBtn.textContent = '📍 現在地';
+          }
+        },
+        () => {
+          alert('位置情報の取得に失敗しました。');
+          if (locateBtn) {
+            locateBtn.disabled = false;
+            locateBtn.textContent = '📍 現在地';
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    }
+
+    // ページ読み込み後にイベントを登録し、初期表示を設定する
+    document.addEventListener('DOMContentLoaded', () => {
+      const btnLst = $('#btn-lst');
+      const searchInput = $('#search-input');
+
+      $('#info-close').on('click', hideDia);
+      $('#locate-btn').on('click', showCurrentLocation);
+      makeDraggable(document.getElementById('info'));
+      $('.cat-btn').on('click', function () {
+        setActiveCategory($(this).data('key'));
+      });
+
+      searchInput.on('input', applySearchFilter);
+
+      $('#search-btn').on('click', () => {
+        searchInput.trigger('input');
+      });
+
+      setActiveCategory('spots');
+    });
+
+  </script>
+
+</body>
+
+</html>
